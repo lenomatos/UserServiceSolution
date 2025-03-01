@@ -3,10 +3,13 @@
 
 # Ignore migrations
 /Migrations/
+/UserService/Migrations/
 
 # Ignore build and output directories
 /bin/
 /obj/
+/UserService/bin/
+/UserService/obj/
 
 # Ignore user-specific files
 *.user
