@@ -1,0 +1,63 @@
+# Ignore .env files (sensitive data)
+.env
+
+# Ignore migrations
+/Migrations/
+
+# Ignore build and output directories
+/bin/
+/obj/
+
+# Ignore user-specific files
+*.user
+*.suo
+*.userprefs
+
+# Ignore NuGet packages and cache
+.nuget/
+packages/
+.nuget/packages/
+
+# Ignore local development files
+.vs/
+.vscode/
+.idea/
+
+# Ignore test results
+TestResults/
+*.trx
+
+# Ignore logs and diagnostics
+logs/
+*.log
+*.nlog
+
+# Ignore Docker files
+docker-compose.*
+Dockerfile
+.dockerignore
+
+# Ignore Rider/ReSharper files
+_ReSharper.*
+*.sln.iml
+
+# Ignore Azure Functions
+local.settings.json
+
+# Ignore macOS files
+.DS_Store
+
+# Ignore Visual Studio cache files
+*.vspscc
+*.vssscc
+
+# Ignore Rider/ReSharper cache
+.idea/
+*.idea/
+
+# Ignore JetBrains Rider cache
+.idea/
+*.idea/
+
+# Ignore Visual Studio Code settings
+.vscode/
