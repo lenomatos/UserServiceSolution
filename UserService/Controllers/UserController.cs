@@ -37,7 +37,7 @@ namespace UserService.Controllers
         public async Task<IActionResult> GetCheck()
         {
           
-            return Ok();
+            return Ok(new { message = "GetCheck successfully" });
         }
 
         // Endpoint for user registration
