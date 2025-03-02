@@ -402,3 +402,5 @@ FodyWeavers.xsd
 
 # Ignore .env files (sensitive data)
 .env
+bin/
+obj/
