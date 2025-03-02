@@ -6,6 +6,9 @@
 /UserService/Migrations/
 
 # Ignore build and output directories
+# Build artifacts
+bin/
+obj/
 /bin/
 /obj/
 /UserService/bin/
