@@ -5,5 +5,6 @@
         Task StoreTokenAsync(string userId, string token, TimeSpan expiry);
         Task InvalidateTokenAsync(string token);
         Task<bool> IsTokenValidAsync(string token);
+        Task<bool> CanAddNewLogin(string token);
     }
 }

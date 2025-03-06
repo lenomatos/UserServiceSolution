@@ -6,23 +6,43 @@ namespace UserService.Config
     {
         public enum Roles
         {
+            [Description("Admin")]
             Admin,
+            [Description("Seller")]
             Seller,
+            [Description("Customer")]
             Customer
         }
 
         public enum Claims
         {
+            [Description("Email")]
             Email,
+            [Description("PhoneNumber")]
             PhoneNumber,
-            IsVerified
+            [Description("IsVerified")]
+            IsVerified,
+            [Description("Read")]
+            Read,
+            [Description("Write")]
+            Write,
+            [Description("Delete")]
+            Delete
         }
 
         public enum Policies
         {
+            [Description("AdminOnly")]
+            AdminOnly,
+            [Description("SellerOnly")]
+            SellerOnly,
+            [Description("CanUpdate")]
+            CanUpdate,
+            [Description("IsVerifiedCustomer")]
             IsVerifiedCustomer
         }
-        public static string GetRoleOrClaim<T>(T enumValue) where T : Enum
+
+        public static string GetRoleOrClaimOrPolice<T>(T enumValue) where T : Enum
         {
             var enumType = typeof(T);
             var enumName = Enum.GetName(enumType, enumValue);

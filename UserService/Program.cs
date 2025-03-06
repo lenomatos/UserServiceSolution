@@ -10,12 +10,22 @@ builder.AddRedisConfig();
 builder.RegisterServices();
 builder.AddJwtAuthenticationConfig();
 
-builder.Services.AddAuthorization();
+
+builder.AddAuthorizationAndPolicyConfig();
+
 builder.Services.AddEndpointsApiExplorer();
 
 builder.AddSwaggerGenConfig();
 
 var app = builder.Build();
+
+// Seed roles and claims into the database
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    await SeedRolesAndClaimsConfig.SeedRolesAndClaims(services);
+}
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

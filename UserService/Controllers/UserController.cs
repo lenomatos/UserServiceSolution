@@ -8,6 +8,7 @@ using System.Text;
 using UserService.DTOs;
 using UserService.Models;
 using UserService.Services.Interfaces;
+using static UserService.Config.RolesAndClaimsHelper;
 
 namespace UserService.Controllers
 {
@@ -17,15 +18,18 @@ namespace UserService.Controllers
     public class UserController : ControllerBase
     {
         private readonly UserManager<User> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly SignInManager<User> _signInManager;
         private readonly IConfiguration _configuration;
         private readonly ITokenService _tokenService;
         public UserController(UserManager<User> userManager,
+            RoleManager<IdentityRole> roleManager,
             SignInManager<User> signInManager,
             IConfiguration configuration,
             ITokenService tokenService)
         {
             _userManager = userManager;
+            _roleManager = roleManager;
             _signInManager = signInManager;
             _configuration = configuration;
             _tokenService = tokenService;
@@ -35,9 +39,8 @@ namespace UserService.Controllers
         [Authorize]
         [HttpGet("check")]
         public async Task<IActionResult> GetCheck()
-        {
-          
-            return Ok(new { message = "GetCheck successfully" });
+        {      
+            return Ok();
         }
 
         // Endpoint for user registration
@@ -92,6 +95,13 @@ namespace UserService.Controllers
                 return Unauthorized(new { message = "Invalid login attempt." });
             }
 
+            // Check the number of active tokens for the user
+            var canAddNewLogin = await _tokenService.CanAddNewLogin(user.Id);
+            if (canAddNewLogin) // Maximum allowed active tokens
+            {
+                return BadRequest(new { message = "Maximum number of active sessions reached. Please log out from another device." });
+            }
+
             // Generate the JWT token
             var token = await GenerateJwtTokenAsync(user);
 
@@ -121,6 +131,7 @@ namespace UserService.Controllers
 
             return Ok(new { message = "Logged out successfully." });
         }
+
         // Endpoint to get user profile
         [HttpGet("profile")]
         public async Task<IActionResult> GetProfile()
@@ -146,6 +157,70 @@ namespace UserService.Controllers
             };
 
             return Ok(userProfile);
+        }
+
+
+
+        [HttpPost("add-claims-roles")]
+        //[Authorize(Roles = nameof(Roles.Admin))]
+        public async Task<IActionResult> AddClaimsAndRoles([FromBody] AddClaimsAndRolesDto model)
+        {
+            // Validate the input
+            if (model == null || string.IsNullOrEmpty(model.UserId))
+            {
+                return BadRequest("User ID is required.");
+            }
+
+            // Find the user by ID
+            var user = await _userManager.FindByIdAsync(model.UserId);
+            if (user == null)
+            {
+                return NotFound("User not found.");
+            }
+
+            // Add roles to the user
+            if (model.Roles != null && model.Roles.Any())
+            {
+                foreach (var role in model.Roles)
+                {
+                    // Check if the role exists
+                    if (!await _roleManager.RoleExistsAsync(role))
+                    {
+                        return BadRequest($"Role '{role}' does not exist.");
+                    }
+
+                    // Add the role to the user
+                    var result = await _userManager.AddToRoleAsync(user, role);
+                    if (!result.Succeeded)
+                    {
+                        return BadRequest($"Failed to add role '{role}' to the user.");
+                    }
+                }
+            }
+
+            // Add claims to the user
+            if (model.Claims != null && model.Claims.Any())
+            {
+                foreach (var claim in model.Claims)
+                {
+                    // Add the claim to the user
+                    var result = await _userManager.AddClaimAsync(user, new Claim(claim.Type, claim.Value));
+                    if (!result.Succeeded)
+                    {
+                        return BadRequest($"Failed to add claim '{claim.Type}: {claim.Value}' to the user.");
+                    }
+                }
+            }
+
+            // Optionally, check if the user meets a specific policy
+            //var authorizationService = HttpContext.RequestServices.GetRequiredService<IAuthorizationService>();
+            //var policyCheck = await authorizationService.AuthorizeAsync(User, "CanRead");
+            //if (!policyCheck.Succeeded)
+            //{
+            //    return BadRequest("User does not meet the 'CanRead' policy requirements.");
+            //}
+
+            return Ok(new { message = "Claims, roles, and policies applied successfully." });
         }
 
         [HttpPost("changepassword")]
@@ -208,6 +283,11 @@ namespace UserService.Controllers
             {
                 claims.Add(new Claim(ClaimTypes.Role, role));
             }
+
+            // Add user-specific claims
+            var userClaims = await _userManager.GetClaimsAsync(user);
+            if (userClaims.Any())
+                claims.AddRange(userClaims);
 
             // Create the signing key
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
